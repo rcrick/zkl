@@ -15,8 +15,8 @@ func main() {
 		panic(err)
 	}
 	wg := sync.WaitGroup{}
-	wg.Add(3)
-	for i := 0; i < 3; i++ {
+	wg.Add(80)
+	for i := 0; i < 80; i++ {
 		go func() {
 			lockUnlock(test)
 			wg.Done()

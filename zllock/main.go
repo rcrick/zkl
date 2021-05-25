@@ -31,7 +31,7 @@ type ZKLock struct {
 func (zl *ZKLock) Init(rootPath string, servers []string) error {
 	zl.rootPath = rootPath
 	var err error
-	zl.conn, _, err = zk.Connect(servers, time.Second*10)
+	zl.conn, _, err = zk.Connect(servers, time.Second*100)
 	if err != nil {
 		panic(err)
 	}
@@ -115,11 +115,13 @@ func (zl *ZKLock) waitLock(path string) error {
 	}
 }
 
-func (zl *ZKLock) Unlock() error {
+func (zl *ZKLock) Unlock() (err error) {
 	fmt.Println("Release lock: " + zl.pathName)
 	_, s, err := zl.conn.Get(zl.pathName)
 	if err != nil {
 		return err
 	}
-	return zl.conn.Delete(zl.pathName, s.Version)
+	defer zl.conn.Close()
+	err = zl.conn.Delete(zl.pathName, s.Version)
+	return
 }
