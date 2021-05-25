@@ -1,6 +1,9 @@
 # zkl
 Simple Zookeeper distribute lock
 
+## start zookeeper container
+`docker-compose -f stack.yml up`
+
 Run:
 ```
 zookeeper-test$ go run main.go 
