@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github/com/xzx/zkl/zllock"
 	"sync"
+	"time"
 )
 
 var n = 0
@@ -15,8 +16,9 @@ func main() {
 		panic(err)
 	}
 	wg := sync.WaitGroup{}
-	wg.Add(80)
-	for i := 0; i < 80; i++ {
+
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
 		go func() {
 			lockUnlock(test)
 			wg.Done()
@@ -30,7 +32,7 @@ func main() {
 
 func lockUnlock(f func()) {
 	zl := new(zllock.ZKLock)
-	err := zl.CreateLock("/lockTest", []string{"127.0.0.1:2181"})
+	err := zl.CreateLock("/lockTest", 10*time.Second, []string{"127.0.0.1:2181"})
 	if err != nil {
 		panic(err)
 	}
@@ -48,6 +50,6 @@ func lockUnlock(f func()) {
 }
 
 func test() {
-	// time.Sleep(time.Millisecond * 10)
+	time.Sleep(1 * time.Second)
 	n = n + 1
 }

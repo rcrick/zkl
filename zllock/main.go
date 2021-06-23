@@ -46,10 +46,10 @@ func (zl *ZKLock) Init(rootPath string, servers []string) error {
 	return nil
 }
 
-func (zl *ZKLock) CreateLock(rootPath string, servers []string) error {
+func (zl *ZKLock) CreateLock(rootPath string, timeout time.Duration, servers []string) error {
 	zl.rootPath = rootPath
 	var err error
-	zl.conn, _, err = zk.Connect(servers, time.Second*10)
+	zl.conn, _, err = zk.Connect(servers, timeout)
 	if err != nil {
 		panic(err)
 	}
@@ -79,7 +79,8 @@ func (zl *ZKLock) AttempLock() error {
 		return err
 	}
 
-	return zl.waitLock(wtachPath)
+	err =  zl.waitLock(wtachPath)
+	return zl.AttempLock()
 }
 
 func (zl *ZKLock) getWatchPath(lockPaths []string) (string, error) {
@@ -92,7 +93,7 @@ func (zl *ZKLock) getWatchPath(lockPaths []string) (string, error) {
 }
 
 func (zl *ZKLock) waitLock(path string) error {
-	fmt.Println("start monitoring path: " + path)
+	fmt.Printf("Node %s start monitoring path: %s\n", zl.pathName, path)
 	isExist, _, nodeEvent, err := zl.conn.ExistsW(path)
 	if err != nil {
 		return err
@@ -107,7 +108,7 @@ func (zl *ZKLock) waitLock(path string) error {
 		case event := <-nodeEvent:
 			{
 				if event.Type == zk.EventNodeDeleted {
-					fmt.Printf("%s Monitor node goes offline, get lock\n", zl.pathName)
+					fmt.Printf("Monitor %s node goes offline, %s can get lock\n", path, zl.pathName)
 					return nil
 				}
 			}
@@ -121,7 +122,8 @@ func (zl *ZKLock) Unlock() (err error) {
 	if err != nil {
 		return err
 	}
-	defer zl.conn.Close()
 	err = zl.conn.Delete(zl.pathName, s.Version)
+	zl.conn.Close()
+
 	return
 }
